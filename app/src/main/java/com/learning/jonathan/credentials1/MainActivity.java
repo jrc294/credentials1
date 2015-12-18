@@ -17,14 +17,16 @@ import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.Scopes;
+import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.plus.Plus;
+import com.google.android.gms.plus.model.people.Person;
 
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, View.OnClickListener {
 
     GoogleApiClient mGoogleApiClient;
-    Button btnSignIn;
+    SignInButton btnSignIn;
     Button btnSignOut;
     Button btnRevoke;
     TextView txtStatus;
@@ -60,7 +62,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
         buildClient();
 
-        btnSignIn = (Button) findViewById(R.id.btnSignIn);
+        btnSignIn = (SignInButton) findViewById(R.id.btnSignIn);
         btnSignOut = (Button) findViewById(R.id.btnSignOut);
         btnRevoke = (Button) findViewById(R.id.btnRevokeAccess);
         txtStatus = (TextView) findViewById(R.id.txtStatus);
@@ -101,7 +103,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         btnRevoke.setEnabled(true);
         btnSignOut.setEnabled(true);
 
-        txtStatus.setText(String.format("Signed into G+ as %s", Plus.PeopleApi.getCurrentPerson(mGoogleApiClient).getDisplayName()));
+        Person person = Plus.PeopleApi.getCurrentPerson(mGoogleApiClient);
+        if (person != null) {
+            txtStatus.setText(String.format("Signed into G+ as %s", person.getDisplayName()));
+        }
     }
 
     @Override
@@ -116,7 +121,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
 
-
+        Log.d(TAG, "onConnectionFailed");
         if (mSignInProgress != STATE_PROGRESS) {
             // If we are SIGNED_OUT or SIGNED_IN and are reconnecting the client...
             //
@@ -125,7 +130,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             mSignInIntent = connectionResult.getResolution();
             mSignInError = connectionResult.getErrorCode();
             if (mSignInProgress == STATE_SIGN_IN) {
-
+                Log.d(TAG, "onConnectionFailed STATE_SIGN_IN");
                 // STATE_SIGN_IN indicates the user already clicked the sign in
                 // so we should continue processing errors until the user is signed in
                 // or they click cancel
@@ -143,6 +148,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 .addOnConnectionFailedListener(this)
                 .addApi(Plus.API, Plus.PlusOptions.builder().build())
                 .addScope(new Scope(Scopes.PROFILE))
+                //.addApi(Plus.API)
+                //.addScope(Plus.SCOPE_PLUS_PROFILE)
+                //.addScope(Plus.SCOPE_PLUS_LOGIN)*/
                 .build();
     }
 
@@ -174,6 +182,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     // policies
                     Plus.AccountApi.revokeAccessAndDisconnect(mGoogleApiClient);
                     buildClient();
+                    mGoogleApiClient.connect();
                     break;
             }
         }
@@ -181,12 +190,14 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     @Override
     protected void onStart() {
+        Log.d(TAG, "onStart");
         super.onStart();
         mGoogleApiClient.connect();
     }
 
     @Override
     protected void onStop() {
+        Log.d(TAG, "onStop");
         if (mGoogleApiClient.isConnected()) {
             mGoogleApiClient.disconnect();
         }
@@ -194,6 +205,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     }
 
     private void onSignedOut() {
+        Log.d(TAG, "onSignedOut");
         // Update the UI to reflect that the user is signed out
         btnSignIn.setEnabled(true);
         btnSignOut.setEnabled(false);
@@ -202,6 +214,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     }
 
     private void resolveSignInError() {
+        Log.d(TAG, "resolveSignInError");
         if (mSignInIntent != null) {
             // We have an intent which will allow our user to sign in or
             // resolve an error. For example if the user needs to
@@ -233,13 +246,15 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-
+        Log.d(TAG, "onActivityResult");
         switch(requestCode) {
             case RC_SIGN_IN:
                 if (resultCode == RESULT_OK) {
                     mSignInProgress = STATE_SIGN_IN;
+                    Log.d(TAG, "onActivityResult STATE_SIGN_IN");
                 } else {
                     mSignInProgress = STATE_SIGNED_IN;
+                    Log.d(TAG, "onActivityResult STATE_SIGNED_IN");
                 }
 
                 if (!mGoogleApiClient.isConnecting()) {

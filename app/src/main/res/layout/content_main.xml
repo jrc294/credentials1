@@ -13,7 +13,7 @@
         android:id="@+id/buttons"
         android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content">
         <com.google.android.gms.common.SignInButton
             android:id="@+id/btnSignIn"
             android:text="Sign In"
@@ -37,5 +37,6 @@
         android:id="@+id/txtStatus"
         android:layout_below="@id/buttons"
         android:layout_width="match_parent"
+        android:text="Place Holder"
         android:layout_height="wrap_content" />
 </RelativeLayout>
