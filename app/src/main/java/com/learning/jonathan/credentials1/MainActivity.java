@@ -26,7 +26,7 @@ import com.google.android.gms.plus.model.people.Person;
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, View.OnClickListener {
 
     GoogleApiClient mGoogleApiClient;
-    SignInButton btnSignIn;
+    Button btnSignIn;
     Button btnSignOut;
     Button btnRevoke;
     TextView txtStatus;
@@ -62,7 +62,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
         buildClient();
 
-        btnSignIn = (SignInButton) findViewById(R.id.btnSignIn);
+        btnSignIn = (Button) findViewById(R.id.btnSignIn);
         btnSignOut = (Button) findViewById(R.id.btnSignOut);
         btnRevoke = (Button) findViewById(R.id.btnRevokeAccess);
         txtStatus = (TextView) findViewById(R.id.txtStatus);
@@ -112,7 +112,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     @Override
     public void onConnectionSuspended(int i) {
 
-        Log.e(TAG, "Connection suspected cause " + i);
+        Log.d(TAG, "Connection suspected cause " + i);
         if (!mGoogleApiClient.isConnected()) {
             mGoogleApiClient.connect();
         }
@@ -146,16 +146,17 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
+                //.addApi(Plus.API, Plus.PlusOptions.builder().build())
+                //.addScope(new Scope(Scopes.PROFILE))
                 .addApi(Plus.API, Plus.PlusOptions.builder().build())
-                .addScope(new Scope(Scopes.PROFILE))
-                //.addApi(Plus.API)
-                //.addScope(Plus.SCOPE_PLUS_PROFILE)
-                //.addScope(Plus.SCOPE_PLUS_LOGIN)*/
+                .addScope(Plus.SCOPE_PLUS_PROFILE)
+                //.addScope(Plus.SCOPE_PLUS_LOGIN)
                 .build();
     }
 
     @Override
     public void onClick(View view) {
+        Log.d(TAG, "onClick");
         if (!mGoogleApiClient.isConnecting()) {
             // We only process button clicks with GoogleApiClient is not transitioning
             // between connected and not connected
@@ -168,9 +169,13 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     // We clear the default account on sign out so that Google
                     // services will not return an onConnected callback without
                     // interaction
-                    Plus.AccountApi.clearDefaultAccount(mGoogleApiClient);
-                    mGoogleApiClient.disconnect();
-                    mGoogleApiClient.connect();
+                    Log.d(TAG, "btnSignOut");
+                    if (mGoogleApiClient.isConnected()) {
+                        Log.d(TAG, "clearDefaultAccount");
+                        Plus.AccountApi.clearDefaultAccount(mGoogleApiClient);
+                        mGoogleApiClient.disconnect();
+                        mGoogleApiClient.connect();
+                    }
                     break;
                 case R.id.btnRevokeAccess:
                     // After we revoke permissions for the user with a GoogleApiClient
@@ -263,4 +268,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 break;
         }
     }
+
+
 }
